@@ -1,0 +1,80 @@
+The stemming, pattern and synonym filters all return string like value1|value2|value3|.. because its easier to keep
+indexes like that
+The search function works with regex, the query regex is created like : const SEARCH_PATTERN_4 = '/(?:\S+\s){0,3}\S*\b(';
+                                                                        const SEARCH_PATTERN_5 = ')\b\S*(?:\s\S+){0,3}/u';
+SEARCH_PATTERN_4 . $query[0] . SEARCH_PATTERN_5 for queries that have only 1 word
+
+the $query[0] can be initialValue|synonym1|synonym2|anyOfTheseValuesStemmed|anyOfTheseValuesPatternCaptured
+
+the search pattern for longer queries is composed similarly but i take into account first and last query word found in
+the initial text and match for them and 3 words before and after
+the filter order passed to the script is important because the stemming can come before synonyms and then
+synonym filter applied on those
+
+in Filtering/Filters.php i have 2 similar functions which could be broken down in pieces so i don't repeat code but
+i'm out of time. each of these functions have a switch which creates the filteringFunction on the go when needed
+imitating Strategy pattern (Dan showed us), its very easy to understand and its elegant
+
+in Filtering/.*Filter.php there are different implementations for each filter if i have them(not many), they can be
+easily switched by editing Filtering/config.php by changing the "(first|second)Implementation.*"
+Tokenizing is done in a similar manner with switch creating function to use as needed, config isn't implemented yet
+
+In the Util package there are many different function utilized throughout the project like isRegularExpression
+used in RegEx validation , flatten array which i used for the filter mostly because filters return in some cases
+arrays and i want my main structure to be a two-dimensional array for easier parsing in search
+
+In Util/Processing.php i have 2 function in which tokenizers and filters are applied on query/input
+
+In Validating/Validations.php i have validations (like.. who would have thought?)
+i have an $error array which after all the functions are called will have error messages and a -1 on the first position
+so i can stop the application if at least one validation failed
+reduceAndSort is a helper function found in Helpers.php on line 139 which:
+    -flattens the array
+    -removes duplicates
+    -unsets the true flags passed from validator functions that passed the tests
+    -creates another array because the indexes are broken after unset()
+
+The pid of the process is printed for easier reading
+    -the run5.sh script starts the test cases
+
+I intended to split the functionality in different script files but i have some trouble and i decided to use the time to
+fix the bugs i got so far
+
+SearchEngine.php is the entry point of the application, has a main function
+
+input_file.txt contains lorem ipsum from most european countries so i can test normalization and search with utf-8
+characters
+
+file.csv contains few synonymbs because i dont know lorem ipsum language :)
+
+the search is composed from 4 functions :
+-indexSearch - this returns the start index and end index if the whole query was found, taking into account slop
+if the query count is 1 then both indexes are the same
+
+-search - parses all paragraphs until a match is found then returns an array containing first last index in paragraph and
+the paragraph index in which the match is found (the indexes of the processed paragraphs array and the initialParagraphs
+array are the same)
+
+-querySearchPattern - this one creates the pattern for the matching depending on how many arguments the query has
+
+-performSearch-  this function does the matching to return to the user, it tokenizes the initialParagraphs without
+filters to find the word in its original form, it being on the same index as it is in the processed paragraphs array
+
+takes the 1st token index and the last one (found from the indexSearch function) and creates the query as i mentioned
+above
+$firstTextWord = $paragraphsTokenized[$searchResult['paragraphIndex']][$searchResult['firstTokenIndex']];
+$lastTextWord = $paragraphsTokenized[$searchResult['paragraphIndex']][$searchResult['lastTokenIndex']];
+
+$re = querySearchPattern($firstTextWord, $lastTextWord, count($query), $slop);
+
+then the matching is done using the initial paragraphs not tokenized
+preg_match($re, $intactParagraphs[$searchResult['paragraphIndex']], $matches,
+                PREG_OFFSET_CAPTURE, 0)
+
+the matched pushed into an array which contains paragraph index and quote from the text
+then the paragraphs from the last and current search are unset to reduce complexity for the next search
+
+after all paragraphs are parsed they are show in order and in the result array there is an boolean false appended to
+print the "Finished" message to screen that marks the end of the execution
+
+if i missed anything feel free to contact me on email or whatsapp 0799050960 because i dont have skype outside of work

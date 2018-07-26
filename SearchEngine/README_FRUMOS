@@ -1,0 +1,61 @@
+Search Engine wannabe
+Welcome to the Search Engine wannabe Standard Edition - an almost-fully-functional Search Engine application that you
+can use to search even in UTF-8 encoded text.
+
+Getting Started
+These are all the parameters you need to know:
+--input input_file.txt (must be a text file)
+--query 'Boeing'
+--input-tokenizer standard (or whitespace)
+--query-tokenizer whitespace (or standard)
+--input-filters synonyms,stemming,pattern-capture,lowercase,normalize (filter order matters)
+--query-filters synonyms,stemming,pattern-capture,lowercase,normalize
+--synonyms file.csv (required field if the synonyms keyword is present in any of the filters)
+--stemming nd (required field if the stemming keyword is present in any of the filters)
+--pattern '([a-zA-Z]+)([0-9]+)' (required field if the pattern-capture keyword is present in any of the filters)
+--slop 20 (non numeric value, default 0)
+
+Prerequisites
+php7.2+
+
+Examples
+php SearchEngine.php --input input_file.txt --query 'not ípsum' --input-tokenizer standard --query-tokenizer standard
+--input-filters synonyms --query-filters synonyms --synonyms file.csv
+This is how you run a simple query in a not so simple text (the default test text comes in almost all european languages)
+
+
+Running the tests
+bash run5.sh runs the hardcoded tests which cover all the functionality, in a simple manner
+every command is explained in the run5.sh script, what it tests and what the result will be
+
+#works, not is synonymized to nema and Lorem is also synonymized to nema
+php SearchEngine.php --input input_file.txt --query 'not ípsum' --input-tokenizer standard --query-tokenizer standard
+--input-filters synonyms --query-filters synonyms --synonyms file.csv
+
+These tests test whether or not the basic functionality of the search engine works properly
+
+This particular test tests whether or not the search function works as expected when input is tokenized by whitespace
+Tokenizing by whitespace gives results as "Boeing727.ceva" which should not match with the query : "Boeing"
+
+#finds Boeing727 when given Boeing but doesnt find the 2nd paragraph in which Boeing727 exists because it is preceded by
+ "." and the tokenization is whitespace not standard
+php SearchEngine.php --input input_file.txt --query 'Boeing' --input-tokenizer whitespace --query-tokenizer whitespace
+--input-filters synonyms,stemming,pattern-capture,lowercase,normalize --query-filters normalize,lowercase
+ --synonyms file.csv --stemming nd --pattern '([a-zA-Z]+)([0-9]+)' --slop 20
+
+
+Built With
+PHP7.2.7
+
+
+Contributors
+
+Rares Moldovan
+Iulian Iancu
+Georgiana Marian
+Andor Sarig
+Adam Veres
+
+
+Authors
+Abrudean Sergiu Valentin - Initial work - Training Room 2nd Floor
